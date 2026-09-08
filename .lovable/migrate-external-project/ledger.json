@@ -1,0 +1,47 @@
+{
+  "source": "https://github.com/dehlianmol-sys/vivrapay.git",
+  "capabilities": [
+    {
+      "capability": "Active HK Wallet frontend and routes",
+      "source": "src/App.tsx and src/routes",
+      "outcome": "Preserve active implementation",
+      "status": "verified",
+      "next_action": "None"
+    },
+    {
+      "capability": "Phone authentication",
+      "source": "Existing hosted service connection",
+      "outcome": "Preserve provider and auth flow",
+      "status": "verified",
+      "next_action": "None"
+    },
+    {
+      "capability": "Profiles, deposits, affiliates",
+      "source": "Existing hosted database and migration",
+      "outcome": "Preserve existing connection and schema contract",
+      "status": "verified",
+      "next_action": "None"
+    },
+    {
+      "capability": "Logo storage",
+      "source": "logos/virapay_logo.png",
+      "outcome": "Existing logo object is unavailable (HTTP 400)",
+      "status": "pending",
+      "next_action": "Restore logos/virapay_logo.png in the existing storage service"
+    },
+    {
+      "capability": "Database records",
+      "source": "Repository export",
+      "outcome": "No record export was bundled",
+      "status": "pending",
+      "next_action": "Provide a record export only if existing hosted records must be migrated elsewhere"
+    },
+    {
+      "capability": "Legacy unused screens",
+      "source": "src/pages and older store modules",
+      "outcome": "Not imported because they are unreachable from the production entry point",
+      "status": "accepted",
+      "next_action": "None"
+    }
+  ]
+}
