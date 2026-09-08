@@ -1,8 +1,9 @@
 import { createStart, createCsrfMiddleware, createMiddleware } from "@tanstack/react-start";
+import type { RequestServerOptions } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 
-const errorMiddleware = createMiddleware().server(async ({ next }: { next: () => Promise<Response> }) => {
+const errorMiddleware = createMiddleware().server(async ({ next }: RequestServerOptions<{}, undefined>) => {
   try {
     return await next();
   } catch (error) {
