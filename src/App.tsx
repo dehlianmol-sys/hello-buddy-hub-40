@@ -45,4 +45,52 @@ function DepositView({ amount, setAmount, onSubmit, onBack }: { amount: string; 
 function PartnersView({ onBack }: { onBack: () => void }) { return <div className="view"><button className="back-link" onClick={onBack}>← Back</button><p className="eyebrow">Partner rewards</p><h1>Grow together.</h1><p className="view-copy">Share your UID and earn from three levels of successful deposits.</p><div className="partner-metric"><span>Direct reward</span><strong>5%</strong><small>Reward on every Tier 1 deposit</small></div><div className="tier-list">{rewards.map((reward) => <div className="tier-row" key={reward.label}><div><b>{reward.label}</b><small>{reward.detail}</small></div><strong>{reward.rate}</strong></div>)}</div><div className="share-card"><span>Your referral UID</span><strong>Copy from your profile</strong><button onClick={() => navigator.clipboard?.writeText('HK-WALLET')}>Copy UID</button></div></div>; }
 function AdminView({ onBack }: { onBack: () => void }) { const [affiliates, setAffiliates] = useState<{ affiliate_id: string; name: string; total_deposits: number; total_pending_deposits: number }[]>([]); useEffect(() => { void supabase.from('affiliates').select('affiliate_id, name, total_deposits, total_pending_deposits').then((result) => { if (result.data) setAffiliates(result.data); }); }, []); return <div className="view"><button className="back-link" onClick={onBack}>← Back</button><p className="eyebrow">Admin view</p><h1>Manage partners.</h1><p className="view-copy">Review partner performance and the active reward structure.</p><div className="admin-grid"><div><span>Tier 1</span><b>5%</b></div><div><span>Tier 2</span><b>0.3%</b></div><div><span>Tier 3</span><b>0.1%</b></div></div><div className="section-heading"><h2>Partner metrics</h2><span>{affiliates.length} total</span></div>{affiliates.length === 0 ? <div className="empty-card">No partner records have been added yet.</div> : affiliates.map((affiliate) => <div className="history-row" key={affiliate.affiliate_id}><div><b>{affiliate.name || affiliate.affiliate_id}</b><small>{affiliate.total_pending_deposits} pending</small></div><span>₹{affiliate.total_deposits}</span></div>)}</div>; }
 
-export default function App() { const [session, setSession] = useState<Session | null>(null); useEffect(() => { void supabase.auth.getSession().then(({ data }) => setSession(data.session)); const { data } = supabase.auth.onAuthStateChange((_event, currentSession) => setSession(currentSession)); return () => data.subscription.unsubscribe(); }, []); const path = window.location.pathname; if (session) return <AppShell user={session.user} onSignOut={() => void supabase.auth.signOut()} />; if (path === '/login') return <Auth register={false} onDone={setSession} />; if (path.startsWith('/register/invduurg-')) return <Auth register referralUid={path.replace('/register/invduurg-', '')} onDone={setSession} />; return <Landing />; }
+function Register({ lockedRef }: { lockedRef: string }) {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [referral, setReferral] = useState(lockedRef);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const locked = Boolean(lockedRef);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    const code = referral.trim().toUpperCase();
+    if (!code) { setError('A referral code is required to register.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    setLoading(true);
+    const value = identifier.trim();
+    const isEmail = value.includes('@');
+    const credentials = isEmail ? { email: value } : { phone: `+91${value.replace(/\D/g, '')}` };
+    const result = await supabase.auth.signUp({ ...credentials, password, options: { data: { referral_code: code, referred_by: code } } } as never);
+    if (result.error) { setError(result.error.message); setLoading(false); return; }
+    const session = result.data.session;
+    if (session) {
+      await supabase.from('profiles').upsert({ id: session.user.id, referred_by: code, referred_by_uid: code });
+      await supabase.auth.signOut();
+    }
+    window.location.replace('/download');
+  }
+
+  return <main className="auth-page"><div className="auth-card compact"><Logo compact /><h1>Create account</h1><p className="auth-intro">Register with a referral code, then download the app.</p><form onSubmit={submit}><label>Phone or Email<div className="field"><input value={identifier} onChange={(event) => setIdentifier(event.target.value)} placeholder="Mobile number or email" required /></div></label><label>Password<div className="field"><input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 6 characters" required minLength={6} /></div></label><label>Confirm Password<div className="field"><input type="password" value={confirm} onChange={(event) => setConfirm(event.target.value)} placeholder="Re-enter password" required minLength={6} /></div></label><label>Referral Code<div className="field"><input value={referral} onChange={(event) => setReferral(event.target.value.toUpperCase())} placeholder="Enter referral code" required readOnly={locked} disabled={locked} /></div>{locked && <small className="hint">Applied from your invite link</small>}</label>{error && <div className="error-box">{error}</div>}<button className="dark-button" disabled={loading}>{loading ? 'Please wait' : 'Register'}</button></form><p className="auth-switch">Already have an account? <a href="/login">Login</a></p></div></main>;
+}
+
+function Download() {
+  const items = [{ icon: '◌', title: 'Easy tasks', sub: 'Earn every day' }, { icon: '↯', title: 'Fast withdrawals', sub: 'Instant UPI payouts' }, { icon: '+', title: 'Refer & earn', sub: 'Up to 5% rewards' }];
+  return <main className="landing-shell"><header className="landing-header"><Logo /><a href="/hkwallet.apk" className="orange-button small" download>Get APK</a></header><section className="landing-content"><p className="eyebrow">Registration complete</p><h1>DOWNLOAD<br />HK WALLET APP</h1><p className="download-copy">Your account is ready. Install the app to log in, complete tasks and withdraw your earnings.</p><a href="/hkwallet.apk" className="orange-button full" download>Download App (APK)</a><div className="feature-grid">{items.map((item) => <Feature key={item.title} icon={item.icon} title={item.title} sub={item.sub} />)}</div><div className="white-title">Why the app?</div><div className="why-copy"><p><strong>Everything in one place:</strong> wallet balance, deposits and rewards.</p><p><strong>Instant alerts:</strong> know the moment a payout lands.</p><p><strong>Secure sign-in:</strong> your account stays protected on your device.</p></div><div className="join-banner">Install the APK, sign in and start earning today.</div><a href="/hkwallet.apk" className="orange-button full" download>Download App (APK)</a></section></main>;
+}
+
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  useEffect(() => { void supabase.auth.getSession().then(({ data }) => setSession(data.session)); const { data } = supabase.auth.onAuthStateChange((_event, currentSession) => setSession(currentSession)); return () => data.subscription.unsubscribe(); }, []);
+  const path = window.location.pathname;
+  const refParam = new URLSearchParams(window.location.search).get('ref') ?? '';
+  if (path === '/download') return <Download />;
+  if (path === '/register' || path.startsWith('/register/')) return <Register lockedRef={(refParam || path.replace('/register/invduurg-', '').replace('/register/', '')).toUpperCase()} />;
+  if (session) return <AppShell user={session.user} onSignOut={() => void supabase.auth.signOut()} />;
+  if (path === '/login') return <Auth register={false} onDone={setSession} />;
+  return <Landing />;
+}
