@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { createClient, Session, User } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] ?? 'https://dmqiauxksjspxwtvdcdx.supabase.co';
-const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtcWlhdXhrc2pzcHh3dHZkY2R4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDc5OTAsImV4cCI6MjEwMzg4Mzk5MH0.NEhF7zRlaUMgGbhDY08y2WyMDSttd0G6xcytBA-SG6A';
+const supabaseUrl = import.meta.env['VITE_SUPABASE_URL'] || 'https://dmqiauxksjspxwtvdcdx.supabase.co';
+const supabaseAnonKey = import.meta.env['VITE_SUPABASE_ANON_KEY'] || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRtcWlhdXhrc2pzcHh3dHZkY2R4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzMDc5OTAsImV4cCI6MjEwMzg4Mzk5MH0.NEhF7zRlaUMgGbhDY08y2WyMDSttd0G6xcytBA-SG6A';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const downloadUrl = 'https://gofile.io/d/FlX3pVC7';
 const rewards = [{ label: 'Tier 1', rate: '5%', detail: 'Direct referrals' }, { label: 'Tier 2', rate: '0.3%', detail: 'Second level' }, { label: 'Tier 3', rate: '0.1%', detail: 'Third level' }];
