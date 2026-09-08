@@ -25,9 +25,9 @@
     {
       "capability": "Logo storage",
       "source": "logos/virapay_logo.png",
-      "outcome": "Preserve existing public storage URL",
-      "status": "verified",
-      "next_action": "None"
+      "outcome": "Existing logo object is unavailable (HTTP 400)",
+      "status": "pending",
+      "next_action": "Restore logos/virapay_logo.png in the existing storage service"
     },
     {
       "capability": "Database records",
